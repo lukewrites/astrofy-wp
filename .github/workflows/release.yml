@@ -1,0 +1,36 @@
+name: Release Theme
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build CSS
+      run: npm run build:css
+
+    - name: Package Theme
+      run: |
+        zip -r astrofy-wp.zip . -x "node_modules/*" -x ".git/*" -x ".github/*" -x "tailwind.config.js" -x "package.json" -x "package-lock.json" -x ".wp-env.json"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: astrofy-wp.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
