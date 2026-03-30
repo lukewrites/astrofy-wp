@@ -35,11 +35,11 @@ $support_url   = get_theme_mod( 'astrofy_support_url', '' );
             ?>
             <ul class="menu grow shrink menu-md overflow-y-auto">
                 <li><a class="py-3 text-base<?php if ( is_front_page() ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a></li>
-                <li><a class="py-3 text-base<?php if ( is_page( 'projects' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/projects/' ) ); ?>">Projects</a></li>
-                <li><a class="py-3 text-base<?php if ( is_page( 'services' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/services/' ) ); ?>">Services</a></li>
-                <li><a class="py-3 text-base<?php if ( is_post_type_archive( 'store_item' ) || is_singular( 'store_item' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( get_post_type_archive_link( 'store_item' ) ); ?>">Store</a></li>
-                <li><a class="py-3 text-base<?php if ( is_home() || is_singular( 'post' ) || is_tag() || ( is_archive() && ! is_post_type_archive() ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/blog/' ) ); ?>">Blog</a></li>
-                <li><a class="py-3 text-base<?php if ( is_page( 'cv' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/cv/' ) ); ?>">CV</a></li>
+                <li><a class="py-3 text-base<?php if ( ! is_front_page() && is_page( 'projects' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/projects/' ) ); ?>">Projects</a></li>
+                <li><a class="py-3 text-base<?php if ( ! is_front_page() && is_page( 'services' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/services/' ) ); ?>">Services</a></li>
+                <li><a class="py-3 text-base<?php if ( ! is_front_page() && ( is_post_type_archive( 'store_item' ) || is_singular( 'store_item' ) ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( get_post_type_archive_link( 'store_item' ) ); ?>">Store</a></li>
+                <li><a class="py-3 text-base<?php if ( ! is_front_page() && ( is_home() || is_singular( 'post' ) || is_tag() || ( is_archive() && ! is_post_type_archive() ) ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/blog/' ) ); ?>">Blog</a></li>
+                <li><a class="py-3 text-base<?php if ( ! is_front_page() && is_page( 'cv' ) ) echo ' bg-base-300'; ?>" href="<?php echo esc_url( home_url( '/cv/' ) ); ?>">CV</a></li>
                 <?php
                 $contact_email = get_theme_mod( 'astrofy_contact_email', '' );
                 if ( $contact_email ) : ?>

@@ -5,7 +5,7 @@
 $daisyui_theme = get_theme_mod( 'astrofy_daisyui_theme', 'lofi' );
 ?>
 <!doctype html>
-<html lang="<?php language_attributes(); ?>" data-theme="<?php echo esc_attr( $daisyui_theme ); ?>">
+<html <?php language_attributes(); ?> data-theme="<?php echo esc_attr( $daisyui_theme ); ?>">
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -26,7 +26,7 @@ jobs:
 
     - name: Package Theme
       run: |
-        zip -r astrofy-wp.zip . -x "node_modules/*" -x ".git/*" -x ".github/*" -x "tailwind.config.js" -x "package.json" -x "package-lock.json" -x ".wp-env.json"
+        zip -r astrofy-wp.zip . -x "node_modules/*" -x ".git/*" -x ".github/*" -x "tailwind.config.js" -x "package.json" -x "package-lock.json" -x ".wp-env.json" -x "*.zip" -x ".gitignore" -x ".DS_Store"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1

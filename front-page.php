@@ -23,7 +23,7 @@ $cta2_url    = get_theme_mod( 'astrofy_hero_cta2_url', '#' );
     </div>
     <div class="mt-8">
         <?php if ( $cta1_label && $cta1_url ) : ?>
-        <a class="btn" href="<?php echo esc_url( $cta1_url ); ?>" target="_blank"><?php echo esc_html( $cta1_label ); ?></a>
+        <a class="btn btn-primary" href="<?php echo esc_url( $cta1_url ); ?>" target="_blank"><?php echo esc_html( $cta1_label ); ?></a>
         <?php endif; ?>
         <?php if ( $cta2_label && $cta2_url ) : ?>
         <a href="<?php echo esc_url( $cta2_url ); ?>" target="_blank" class="btn btn-outline ml-5"><?php echo esc_html( $cta2_label ); ?></a>
