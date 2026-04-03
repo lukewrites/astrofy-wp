@@ -2,7 +2,7 @@
 /**
  * Sidebar / Drawer Side Panel
  */
-$profile_image = get_theme_mod( 'astrofy_profile_image', get_template_directory_uri() . '/assets/images/profile.webp' );
+$profile_image = get_theme_mod( 'astrofy_profile_image', get_template_directory_uri() . '/assets/images/profile.svg' );
 $github_url    = get_theme_mod( 'astrofy_github_url', '' );
 $twitter_url   = get_theme_mod( 'astrofy_twitter_url', '' );
 $linkedin_url  = get_theme_mod( 'astrofy_linkedin_url', '' );

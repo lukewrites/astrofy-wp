@@ -37,12 +37,12 @@ function astrofy_customize_register( $wp_customize ) {
 
     $hero_fields = array(
         'astrofy_hero_greeting'   => array( 'label' => 'Greeting', 'default' => 'Hey there 👋' ),
-        'astrofy_hero_name'       => array( 'label' => 'Name', 'default' => "I'm Luke Petschauer" ),
-        'astrofy_hero_title'      => array( 'label' => 'Title', 'default' => 'Software Engineer' ),
+        'astrofy_hero_name'       => array( 'label' => 'Name', 'default' => "I'm Astrofy" ),
+        'astrofy_hero_title'      => array( 'label' => 'Title', 'default' => '(A beautiful WordPress theme)' ),
         'astrofy_hero_description'=> array( 'label' => 'Description', 'default' => 'Welcome to my personal portfolio website built with WordPress and TailwindCSS. Here you can find my blog, CV, projects, and more. Thanks for visiting!' ),
         'astrofy_hero_cta1_label' => array( 'label' => 'CTA 1 Label', 'default' => "Let's connect!" ),
         'astrofy_hero_cta1_url'   => array( 'label' => 'CTA 1 URL', 'default' => '#' ),
-        'astrofy_hero_cta2_label' => array( 'label' => 'CTA 2 Label', 'default' => 'See My Work' ),
+        'astrofy_hero_cta2_label' => array( 'label' => 'CTA 2 Label', 'default' => 'Get This template' ),
         'astrofy_hero_cta2_url'   => array( 'label' => 'CTA 2 URL', 'default' => '#' ),
     );
 

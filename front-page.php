@@ -5,12 +5,12 @@
 get_header();
 
 $greeting    = get_theme_mod( 'astrofy_hero_greeting', 'Hey there 👋' );
-$name        = get_theme_mod( 'astrofy_hero_name', "I'm Luke Petschauer" );
-$title       = get_theme_mod( 'astrofy_hero_title', 'Software Engineer' );
-$description = get_theme_mod( 'astrofy_hero_description', 'Welcome to my personal portfolio website built with WordPress and TailwindCSS. Here you can find my blog, CV, projects, and more. Thanks for visiting!' );
+$name        = get_theme_mod( 'astrofy_hero_name', "I'm Astrofy" );
+$title       = get_theme_mod( 'astrofy_hero_title', 'A Wordpress Theme' );
+$description = get_theme_mod( 'astrofy_hero_description', 'Thanks for visiting!' );
 $cta1_label  = get_theme_mod( 'astrofy_hero_cta1_label', "Let's connect!" );
 $cta1_url    = get_theme_mod( 'astrofy_hero_cta1_url', '#' );
-$cta2_label  = get_theme_mod( 'astrofy_hero_cta2_label', 'See My Work' );
+$cta2_label  = get_theme_mod( 'astrofy_hero_cta2_label', 'Get This template' );
 $cta2_url    = get_theme_mod( 'astrofy_hero_cta2_url', '#' );
 ?>
 
@@ -23,7 +23,7 @@ $cta2_url    = get_theme_mod( 'astrofy_hero_cta2_url', '#' );
     </div>
     <div class="mt-8">
         <?php if ( $cta1_label && $cta1_url ) : ?>
-        <a class="btn btn-primary" href="<?php echo esc_url( $cta1_url ); ?>" target="_blank"><?php echo esc_html( $cta1_label ); ?></a>
+        <a class="btn" href="<?php echo esc_url( $cta1_url ); ?>" target="_blank"><?php echo esc_html( $cta1_label ); ?></a>
         <?php endif; ?>
         <?php if ( $cta2_label && $cta2_url ) : ?>
         <a href="<?php echo esc_url( $cta2_url ); ?>" target="_blank" class="btn btn-outline ml-5"><?php echo esc_html( $cta2_label ); ?></a>
