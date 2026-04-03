@@ -39,6 +39,55 @@ function astrofy_save_post_meta( $post_id ) {
 }
 add_action( 'save_post_post', 'astrofy_save_post_meta' );
 
+// ── Project Meta Box ────────────────────────────────────────────────────
+function astrofy_project_meta_box() {
+    add_meta_box(
+        'astrofy_project_meta',
+        __( 'Project Options', 'astrofy' ),
+        'astrofy_project_meta_callback',
+        'project',
+        'normal',
+        'high'
+    );
+}
+add_action( 'add_meta_boxes', 'astrofy_project_meta_box' );
+
+function astrofy_project_meta_callback( $post ) {
+    wp_nonce_field( 'astrofy_project_meta', 'astrofy_project_meta_nonce' );
+
+    $fields = array(
+        '_astrofy_project_url'   => array( 'label' => 'Project URL (clicking the card goes here)', 'type' => 'url', 'placeholder' => 'https://github.com/...' ),
+        '_astrofy_project_badge' => array( 'label' => 'Badge', 'type' => 'text', 'placeholder' => 'e.g. NEW, Featured, WIP' ),
+    );
+
+    foreach ( $fields as $key => $field ) {
+        $value = get_post_meta( $post->ID, $key, true );
+        ?>
+        <p>
+            <label for="<?php echo esc_attr( $key ); ?>"><strong><?php echo esc_html( $field['label'] ); ?></strong></label><br>
+            <input type="<?php echo esc_attr( $field['type'] ); ?>" id="<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $value ); ?>" class="widefat" placeholder="<?php echo esc_attr( $field['placeholder'] ); ?>" />
+        </p>
+        <?php
+    }
+    echo '<p class="description">' . esc_html__( 'Use the Featured Image box (in the right sidebar) for the project screenshot.', 'astrofy' ) . '</p>';
+}
+
+function astrofy_save_project_meta( $post_id ) {
+    if ( ! isset( $_POST['astrofy_project_meta_nonce'] ) || ! wp_verify_nonce( $_POST['astrofy_project_meta_nonce'], 'astrofy_project_meta' ) ) {
+        return;
+    }
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+    if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+    if ( isset( $_POST['_astrofy_project_url'] ) ) {
+        update_post_meta( $post_id, '_astrofy_project_url', esc_url_raw( $_POST['_astrofy_project_url'] ) );
+    }
+    if ( isset( $_POST['_astrofy_project_badge'] ) ) {
+        update_post_meta( $post_id, '_astrofy_project_badge', sanitize_text_field( $_POST['_astrofy_project_badge'] ) );
+    }
+}
+add_action( 'save_post_project', 'astrofy_save_project_meta' );
+
 // ── Store Item Meta Box ──────────────────────────────────────────────────────
 function astrofy_store_meta_box() {
     add_meta_box(

@@ -36,8 +36,30 @@ function astrofy_dequeue_block_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'astrofy_dequeue_block_styles', 100 );
 
-// ── Register Store Item CPT ──────────────────────────────────────────────────
+// ── Register Custom Post Types ──────────────────────────────────────────────
 function astrofy_register_cpt() {
+    register_post_type( 'project', array(
+        'labels' => array(
+            'name'               => __( 'Projects', 'astrofy' ),
+            'singular_name'      => __( 'Project', 'astrofy' ),
+            'add_new'            => __( 'Add New', 'astrofy' ),
+            'add_new_item'       => __( 'Add New Project', 'astrofy' ),
+            'edit_item'          => __( 'Edit Project', 'astrofy' ),
+            'new_item'           => __( 'New Project', 'astrofy' ),
+            'view_item'          => __( 'View Project', 'astrofy' ),
+            'search_items'       => __( 'Search Projects', 'astrofy' ),
+            'not_found'          => __( 'No projects found', 'astrofy' ),
+            'not_found_in_trash' => __( 'No projects found in Trash', 'astrofy' ),
+        ),
+        'public'             => true,
+        'publicly_queryable' => false,
+        'has_archive'        => true,
+        'rewrite'            => array( 'slug' => 'projects' ),
+        'supports'           => array( 'title', 'thumbnail', 'excerpt' ),
+        'show_in_rest'       => true,
+        'menu_icon'          => 'dashicons-portfolio',
+    ) );
+
     register_post_type( 'store_item', array(
         'labels' => array(
             'name'               => __( 'Store Items', 'astrofy' ),
@@ -81,7 +103,7 @@ add_action( 'init', 'astrofy_rss_rewrite' );
 // ── Posts per page for store archive ─────────────────────────────────────────
 function astrofy_pre_get_posts( $query ) {
     if ( ! is_admin() && $query->is_main_query() ) {
-        if ( is_post_type_archive( 'store_item' ) ) {
+        if ( is_post_type_archive( 'store_item' ) || is_post_type_archive( 'project' ) ) {
             $query->set( 'posts_per_page', 10 );
         }
     }
