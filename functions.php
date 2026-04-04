@@ -52,12 +52,45 @@ function astrofy_register_cpt() {
             'not_found_in_trash' => __( 'No projects found in Trash', 'astrofy' ),
         ),
         'public'             => true,
-        'publicly_queryable' => false,
         'has_archive'        => true,
-        'rewrite'            => array( 'slug' => 'projects' ),
+        'rewrite'            => array( 'slug' => 'projects', 'with_front' => false ),
         'supports'           => array( 'title', 'thumbnail', 'excerpt' ),
         'show_in_rest'       => true,
         'menu_icon'          => 'dashicons-portfolio',
+    ) );
+
+    register_taxonomy( 'project_tag', 'project', array(
+        'labels' => array(
+            'name'          => __( 'Project Tags', 'astrofy' ),
+            'singular_name' => __( 'Project Tag', 'astrofy' ),
+            'add_new_item'  => __( 'Add New Project Tag', 'astrofy' ),
+            'search_items'  => __( 'Search Project Tags', 'astrofy' ),
+        ),
+        'public'       => true,
+        'hierarchical' => false,
+        'rewrite'      => array( 'slug' => 'projects/tag', 'with_front' => false ),
+        'show_in_rest' => true,
+    ) );
+
+    register_post_type( 'service', array(
+        'labels' => array(
+            'name'               => __( 'Services', 'astrofy' ),
+            'singular_name'      => __( 'Service', 'astrofy' ),
+            'add_new'            => __( 'Add New', 'astrofy' ),
+            'add_new_item'       => __( 'Add New Service', 'astrofy' ),
+            'edit_item'          => __( 'Edit Service', 'astrofy' ),
+            'new_item'           => __( 'New Service', 'astrofy' ),
+            'view_item'          => __( 'View Service', 'astrofy' ),
+            'search_items'       => __( 'Search Services', 'astrofy' ),
+            'not_found'          => __( 'No services found', 'astrofy' ),
+            'not_found_in_trash' => __( 'No services found in Trash', 'astrofy' ),
+        ),
+        'public'       => true,
+        'has_archive'  => true,
+        'rewrite'      => array( 'slug' => 'services', 'with_front' => false ),
+        'supports'     => array( 'title', 'thumbnail', 'excerpt' ),
+        'show_in_rest' => true,
+        'menu_icon'    => 'dashicons-admin-generic',
     ) );
 
     register_post_type( 'store_item', array(
@@ -75,7 +108,7 @@ function astrofy_register_cpt() {
         ),
         'public'       => true,
         'has_archive'  => true,
-        'rewrite'      => array( 'slug' => 'store' ),
+        'rewrite'      => array( 'slug' => 'store', 'with_front' => false ),
         'supports'     => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
         'show_in_rest' => true,
         'menu_icon'    => 'dashicons-cart',
@@ -94,6 +127,25 @@ function astrofy_activation() {
 }
 add_action( 'after_switch_theme', 'astrofy_activation' );
 
+// ── Redirect single project pages to external URL or archive ────────────────
+function astrofy_redirect_single_project() {
+    if ( is_singular( 'project' ) ) {
+        $url = get_post_meta( get_the_ID(), '_astrofy_project_url', true );
+        wp_redirect( $url ? $url : get_post_type_archive_link( 'project' ), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'astrofy_redirect_single_project' );
+
+// ── Redirect single service pages to archive ────────────────────────────────
+function astrofy_redirect_single_service() {
+    if ( is_singular( 'service' ) ) {
+        wp_redirect( get_post_type_archive_link( 'service' ), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'astrofy_redirect_single_service' );
+
 // ── RSS redirect ─────────────────────────────────────────────────────────────
 function astrofy_rss_rewrite() {
     add_rewrite_rule( '^rss\.xml$', 'index.php?feed=rss2', 'top' );
@@ -105,6 +157,14 @@ function astrofy_pre_get_posts( $query ) {
     if ( ! is_admin() && $query->is_main_query() ) {
         if ( is_post_type_archive( 'store_item' ) || is_post_type_archive( 'project' ) ) {
             $query->set( 'posts_per_page', 10 );
+        }
+        if ( is_post_type_archive( 'service' ) ) {
+            $query->set( 'posts_per_page', 10 );
+            $query->set( 'meta_query', array(
+                'relation' => 'OR',
+                array( 'key' => '_astrofy_service_active', 'value' => '1' ),
+                array( 'key' => '_astrofy_service_active', 'compare' => 'NOT EXISTS' ),
+            ) );
         }
     }
 }

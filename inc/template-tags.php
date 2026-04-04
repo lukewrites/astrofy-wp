@@ -111,18 +111,34 @@ function astrofy_horizontal_shop_item( $args ) {
 /**
  * Render a timeline element for the CV page.
  */
-function astrofy_timeline_element( $title, $subtitle, $content = '' ) {
+function astrofy_timeline_element( $title, $subtitle, $content = '', $logo_url = '', $skills = '' ) {
+    $skills_array = $skills ? array_map( 'trim', explode( ',', $skills ) ) : array();
+    $data_skills  = $skills ? esc_attr( implode( ',', array_map( 'strtolower', $skills_array ) ) ) : '';
     ?>
-    <div class="flex">
+    <div class="flex cv-entry mb-6" <?php echo $data_skills ? 'data-skills="' . $data_skills . '"' : ''; ?>>
         <div class="education__time">
             <span class="w-4 h-4 bg-primary block rounded-full mt-1"></span>
             <span class="education__line bg-primary block h-full w-[2px] translate-x-[7px]"></span>
         </div>
         <div class="experience__data bd-grid px-5">
-            <h3 class="font-semibold mb-1"><?php echo esc_html( $title ); ?></h3>
-            <span class="font-light text-sm"><?php echo esc_html( $subtitle ); ?></span>
+            <div class="flex items-center gap-3 mb-1">
+                <?php if ( $logo_url ) : ?>
+                <img src="<?php echo esc_url( $logo_url ); ?>" alt="" class="flex-shrink-0 object-contain" style="width:40px;height:40px;" loading="lazy" />
+                <?php endif; ?>
+                <div>
+                    <h3 class="font-semibold"><?php echo esc_html( $title ); ?></h3>
+                    <span class="font-light text-sm"><?php echo esc_html( $subtitle ); ?></span>
+                </div>
+            </div>
             <?php if ( $content ) : ?>
             <p class="my-2 text-justify"><?php echo wp_kses_post( $content ); ?></p>
+            <?php endif; ?>
+            <?php if ( ! empty( $skills_array ) ) : ?>
+            <div class="flex flex-wrap gap-2 mt-3">
+                <?php foreach ( $skills_array as $skill ) : ?>
+                <span class="badge badge-outline badge-sm py-2 px-3"><?php echo esc_html( trim( $skill ) ); ?></span>
+                <?php endforeach; ?>
+            </div>
             <?php endif; ?>
         </div>
     </div>

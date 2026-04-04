@@ -88,6 +88,45 @@ function astrofy_save_project_meta( $post_id ) {
 }
 add_action( 'save_post_project', 'astrofy_save_project_meta' );
 
+// ── Service Meta Box ────────────────────────────────────────────────────
+function astrofy_service_meta_box() {
+    add_meta_box(
+        'astrofy_service_meta',
+        __( 'Service Options', 'astrofy' ),
+        'astrofy_service_meta_callback',
+        'service',
+        'side'
+    );
+}
+add_action( 'add_meta_boxes', 'astrofy_service_meta_box' );
+
+function astrofy_service_meta_callback( $post ) {
+    wp_nonce_field( 'astrofy_service_meta', 'astrofy_service_meta_nonce' );
+    $active = get_post_meta( $post->ID, '_astrofy_service_active', true );
+    if ( $active === '' ) $active = '1';
+    ?>
+    <p>
+        <label>
+            <input type="checkbox" name="astrofy_service_active" value="1" <?php checked( $active, '1' ); ?> />
+            <?php esc_html_e( 'Active (uncheck to hide from the services page)', 'astrofy' ); ?>
+        </label>
+    </p>
+    <p class="description"><?php esc_html_e( 'Use the Featured Image box for the service image and the Excerpt for the description.', 'astrofy' ); ?></p>
+    <?php
+}
+
+function astrofy_save_service_meta( $post_id ) {
+    if ( ! isset( $_POST['astrofy_service_meta_nonce'] ) || ! wp_verify_nonce( $_POST['astrofy_service_meta_nonce'], 'astrofy_service_meta' ) ) {
+        return;
+    }
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+    if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+    $active = isset( $_POST['astrofy_service_active'] ) ? '1' : '0';
+    update_post_meta( $post_id, '_astrofy_service_active', $active );
+}
+add_action( 'save_post_service', 'astrofy_save_service_meta' );
+
 // ── Store Item Meta Box ──────────────────────────────────────────────────────
 function astrofy_store_meta_box() {
     add_meta_box(
@@ -163,10 +202,30 @@ function astrofy_cv_meta_box() {
 }
 add_action( 'add_meta_boxes', 'astrofy_cv_meta_box' );
 
+// Enqueue media uploader on page edit screens for CV logo picker
+function astrofy_cv_admin_scripts( $hook ) {
+    if ( $hook !== 'post.php' && $hook !== 'post-new.php' ) return;
+    $screen = get_current_screen();
+    if ( ! $screen || $screen->post_type !== 'page' ) return;
+
+    wp_enqueue_media();
+    wp_enqueue_script(
+        'astrofy-cv-media',
+        get_template_directory_uri() . '/assets/js/cv-media.js',
+        array( 'jquery' ),
+        '1.0.0',
+        true
+    );
+}
+add_action( 'admin_enqueue_scripts', 'astrofy_cv_admin_scripts' );
+
 function astrofy_cv_meta_callback( $post ) {
     // Only show on the CV page
-    if ( $post->post_name !== 'cv' && get_page_template_slug( $post->ID ) !== 'page-cv.php' ) {
-        echo '<p>' . esc_html__( 'This meta box is only active on the CV page (slug: "cv").', 'astrofy' ) . '</p>';
+    $is_cv = $post->post_name === 'cv'
+        || get_page_template_slug( $post->ID ) === 'page-cv.php'
+        || sanitize_title( $post->post_title ) === 'cv';
+    if ( ! $is_cv ) {
+        echo '<p>' . esc_html__( 'This meta box is only active on the CV page (slug: "cv"). Save the page first if you just set the slug.', 'astrofy' ) . '</p>';
         return;
     }
 
@@ -182,11 +241,18 @@ function astrofy_cv_meta_callback( $post ) {
     if ( ! is_array( $experience ) ) $experience = array();
     if ( ! is_array( $certifications ) ) $certifications = array();
     if ( ! is_array( $skills ) ) $skills = array();
+
+    $skill_names = array_map( function( $s ) { return $s['name'] ?? ''; }, $skills );
+    $skill_names = array_filter( $skill_names );
+    $skills_hint = implode( ', ', $skill_names );
     ?>
     <style>
         .astrofy-repeater { border: 1px solid #ddd; padding: 10px; margin: 5px 0; background: #f9f9f9; }
         .astrofy-repeater input, .astrofy-repeater textarea { width: 100%; margin: 3px 0; }
         .astrofy-remove-row { color: #a00; cursor: pointer; float: right; }
+        .astrofy-logo-preview { max-width: 60px; max-height: 60px; display: block; margin: 5px 0; }
+        .astrofy-image-buttons { margin: 3px 0; }
+        .astrofy-image-buttons .button { margin-right: 5px; }
     </style>
 
     <h3><?php esc_html_e( 'Profile', 'astrofy' ); ?></h3>
@@ -194,12 +260,22 @@ function astrofy_cv_meta_callback( $post ) {
 
     <h3><?php esc_html_e( 'Education', 'astrofy' ); ?></h3>
     <div id="astrofy-education-rows">
-        <?php foreach ( $education as $i => $item ) : ?>
+        <?php foreach ( $education as $i => $item ) :
+            $logo_id  = absint( $item['logo_id'] ?? 0 );
+            $logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'thumbnail' ) : '';
+        ?>
         <div class="astrofy-repeater">
             <span class="astrofy-remove-row" onclick="this.parentElement.remove();">&times;</span>
             <input type="text" name="astrofy_cv_education[<?php echo $i; ?>][title]" value="<?php echo esc_attr( $item['title'] ?? '' ); ?>" placeholder="Title" />
             <input type="text" name="astrofy_cv_education[<?php echo $i; ?>][subtitle]" value="<?php echo esc_attr( $item['subtitle'] ?? '' ); ?>" placeholder="Subtitle (dates, institution)" />
             <textarea name="astrofy_cv_education[<?php echo $i; ?>][description]" placeholder="Description (optional)"><?php echo esc_textarea( $item['description'] ?? '' ); ?></textarea>
+            <input type="text" name="astrofy_cv_education[<?php echo $i; ?>][skills]" value="<?php echo esc_attr( $item['skills'] ?? '' ); ?>" placeholder="Skills (comma-separated<?php echo $skills_hint ? ', e.g. ' . esc_attr( $skills_hint ) : ''; ?>)" />
+            <input type="hidden" class="astrofy-logo-id" name="astrofy_cv_education[<?php echo $i; ?>][logo_id]" value="<?php echo esc_attr( $logo_id ); ?>" />
+            <img class="astrofy-logo-preview" src="<?php echo esc_url( $logo_url ); ?>" <?php echo $logo_url ? '' : 'style="display:none;"'; ?> />
+            <div class="astrofy-image-buttons">
+                <button type="button" class="button astrofy-select-image"><?php esc_html_e( 'Select Logo', 'astrofy' ); ?></button>
+                <button type="button" class="button astrofy-remove-image" <?php echo $logo_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove Logo', 'astrofy' ); ?></button>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>
@@ -207,12 +283,22 @@ function astrofy_cv_meta_callback( $post ) {
 
     <h3><?php esc_html_e( 'Experience', 'astrofy' ); ?></h3>
     <div id="astrofy-experience-rows">
-        <?php foreach ( $experience as $i => $item ) : ?>
+        <?php foreach ( $experience as $i => $item ) :
+            $logo_id  = absint( $item['logo_id'] ?? 0 );
+            $logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'thumbnail' ) : '';
+        ?>
         <div class="astrofy-repeater">
             <span class="astrofy-remove-row" onclick="this.parentElement.remove();">&times;</span>
             <input type="text" name="astrofy_cv_experience[<?php echo $i; ?>][title]" value="<?php echo esc_attr( $item['title'] ?? '' ); ?>" placeholder="Job Title" />
             <input type="text" name="astrofy_cv_experience[<?php echo $i; ?>][subtitle]" value="<?php echo esc_attr( $item['subtitle'] ?? '' ); ?>" placeholder="Subtitle (dates, company)" />
             <textarea name="astrofy_cv_experience[<?php echo $i; ?>][description]" placeholder="Description"><?php echo esc_textarea( $item['description'] ?? '' ); ?></textarea>
+            <input type="text" name="astrofy_cv_experience[<?php echo $i; ?>][skills]" value="<?php echo esc_attr( $item['skills'] ?? '' ); ?>" placeholder="Skills (comma-separated<?php echo $skills_hint ? ', e.g. ' . esc_attr( $skills_hint ) : ''; ?>)" />
+            <input type="hidden" class="astrofy-logo-id" name="astrofy_cv_experience[<?php echo $i; ?>][logo_id]" value="<?php echo esc_attr( $logo_id ); ?>" />
+            <img class="astrofy-logo-preview" src="<?php echo esc_url( $logo_url ); ?>" <?php echo $logo_url ? '' : 'style="display:none;"'; ?> />
+            <div class="astrofy-image-buttons">
+                <button type="button" class="button astrofy-select-image"><?php esc_html_e( 'Select Logo', 'astrofy' ); ?></button>
+                <button type="button" class="button astrofy-remove-image" <?php echo $logo_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove Logo', 'astrofy' ); ?></button>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>
@@ -225,12 +311,14 @@ function astrofy_cv_meta_callback( $post ) {
             <span class="astrofy-remove-row" onclick="this.parentElement.remove();">&times;</span>
             <input type="text" name="astrofy_cv_certifications[<?php echo $i; ?>][name]" value="<?php echo esc_attr( $item['name'] ?? '' ); ?>" placeholder="Certification Name" />
             <input type="url" name="astrofy_cv_certifications[<?php echo $i; ?>][url]" value="<?php echo esc_attr( $item['url'] ?? '' ); ?>" placeholder="Link URL (optional)" />
+            <input type="text" name="astrofy_cv_certifications[<?php echo $i; ?>][skills]" value="<?php echo esc_attr( $item['skills'] ?? '' ); ?>" placeholder="Skills (comma-separated<?php echo $skills_hint ? ', e.g. ' . esc_attr( $skills_hint ) : ''; ?>)" />
         </div>
         <?php endforeach; ?>
     </div>
     <button type="button" class="button" onclick="astrofyAddCertRow();"><?php esc_html_e( '+ Add Certification', 'astrofy' ); ?></button>
 
     <h3><?php esc_html_e( 'Skills', 'astrofy' ); ?></h3>
+    <p class="description"><?php esc_html_e( 'Add skills here. Assign them to entries above using comma-separated skill names. On the CV page, clicking a skill highlights matching entries.', 'astrofy' ); ?></p>
     <div id="astrofy-skills-rows">
         <?php foreach ( $skills as $i => $item ) : ?>
         <div class="astrofy-repeater">
@@ -251,6 +339,13 @@ function astrofy_cv_meta_callback( $post ) {
             '<input type="text" name="astrofy_cv_' + section + '[' + idx + '][title]" placeholder="Title" />' +
             '<input type="text" name="astrofy_cv_' + section + '[' + idx + '][subtitle]" placeholder="Subtitle" />' +
             '<textarea name="astrofy_cv_' + section + '[' + idx + '][description]" placeholder="Description"></textarea>' +
+            '<input type="text" name="astrofy_cv_' + section + '[' + idx + '][skills]" placeholder="Skills (comma-separated)" />' +
+            '<input type="hidden" class="astrofy-logo-id" name="astrofy_cv_' + section + '[' + idx + '][logo_id]" value="" />' +
+            '<img class="astrofy-logo-preview" src="" style="display:none;" />' +
+            '<div class="astrofy-image-buttons">' +
+            '<button type="button" class="button astrofy-select-image">Select Logo</button>' +
+            '<button type="button" class="button astrofy-remove-image" style="display:none;">Remove Logo</button>' +
+            '</div>' +
             '</div>';
         document.getElementById('astrofy-' + section + '-rows').insertAdjacentHTML('beforeend', html);
     }
@@ -261,6 +356,7 @@ function astrofy_cv_meta_callback( $post ) {
             '<span class="astrofy-remove-row" onclick="this.parentElement.remove();">&times;</span>' +
             '<input type="text" name="astrofy_cv_certifications[' + idx + '][name]" placeholder="Certification Name" />' +
             '<input type="url" name="astrofy_cv_certifications[' + idx + '][url]" placeholder="Link URL (optional)" />' +
+            '<input type="text" name="astrofy_cv_certifications[' + idx + '][skills]" placeholder="Skills (comma-separated)" />' +
             '</div>';
         document.getElementById('astrofy-certifications-rows').insertAdjacentHTML('beforeend', html);
     }
@@ -300,6 +396,8 @@ function astrofy_save_cv_meta( $post_id ) {
                         'title'       => sanitize_text_field( $item['title'] ),
                         'subtitle'    => sanitize_text_field( $item['subtitle'] ?? '' ),
                         'description' => sanitize_textarea_field( $item['description'] ?? '' ),
+                        'logo_id'     => absint( $item['logo_id'] ?? 0 ),
+                        'skills'      => sanitize_text_field( $item['skills'] ?? '' ),
                     );
                 }
             }
@@ -315,8 +413,9 @@ function astrofy_save_cv_meta( $post_id ) {
         foreach ( $_POST['astrofy_cv_certifications'] as $item ) {
             if ( ! empty( $item['name'] ) ) {
                 $clean[] = array(
-                    'name' => sanitize_text_field( $item['name'] ),
-                    'url'  => esc_url_raw( $item['url'] ?? '' ),
+                    'name'   => sanitize_text_field( $item['name'] ),
+                    'url'    => esc_url_raw( $item['url'] ?? '' ),
+                    'skills' => sanitize_text_field( $item['skills'] ?? '' ),
                 );
             }
         }
